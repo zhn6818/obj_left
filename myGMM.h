@@ -47,7 +47,7 @@
 #ifndef _MYGMM_H_
 #define _MYGMM_H_
 
-#include "myDIP.h"
+
 //#include <conio.h>//for MS
 
 #ifdef USE_OPENCV
@@ -85,7 +85,6 @@ class myGMM
 public:
 	gaussian  *ptr, *start, *rear, *g_temp, *save, *next, *previous, *nptr, *temp_ptr;
     LNode  *N_ptr,*N_rear, *N_start;//,
-
 	//Some constants for the algorithm
 	double pi;
 	double cthr;
@@ -115,6 +114,7 @@ public:
 
 	unsigned char * r_ptr;
 	unsigned char * b_ptr;
+	unsigned char * m_ptr;
 	
 	//Some function associated with the structure management
 	LNode* Create_Node(double info1, double info2, double info3);
@@ -126,13 +126,13 @@ public:
 	//main founction of GMM
 	myGMM(double LearningRate);
 	~myGMM();
-//	void process(myImage * inputRGB, myImage * outputBIN);
-//	void initial(myImage * inputRGB);
+
 	void ChangeLearningRate( float new_learn_rate);
 
 #ifdef USE_OPENCV
-	void process(Mat orig_img, Mat bin_img);//this function is for opencv user
-	void initial(Mat orig_img);//this function is for opencv user
+	void process(Mat &orig_img, Mat &bin_img);//this function is for opencv user
+    void process(Mat &orig_img, Mat &bin_img, cv::Mat& maskRoi);//this function is for opencv user
+	void initial(Mat &orig_img);//this function is for opencv user
 #endif
 
 private:

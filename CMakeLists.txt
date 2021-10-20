@@ -32,23 +32,23 @@ if(WINDOWS)
     find_package(OpenCV REQUIRED)
     find_package(CUDA REQUIRED)
 endif(WINDOWS)
-
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 link_directories(${MYPROJECT_DIR})
 
-add_definitions(-O2 -g)
+add_definitions(-O2)
 
 #set(CMAKE_C_COMPILER "/usr/bin/gcc") #这里写你的gcc路径
 #set(CMAKE_CXX_COMPILER "/usr/bin/g++") #这里写你的g++路径
 #set(OPENMP_LIBRARIES "/usr/local/lib") #这里写你的libomp路径, 通过brew安装的默认地址
 #set(OPENMP_INCLUDES "/usr/local/include")#这里写你的libomp路径
-
+##
 #message("here")
 #message("${CMAKE_CXX_COMPILER}")
-
-#OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" FALSE)
-
-# Find OpenMP
+#
+#OPTION (USE_OpenMP "Use OpenMP to enamble <omp.h>" ON)
+#
+## Find OpenMP
 #if(APPLE AND USE_OpenMP)
 #    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
 #        set(OpenMP_C "${CMAKE_C_COMPILER}")
@@ -74,7 +74,7 @@ add_definitions(-O2 -g)
 #    find_package(OpenMP REQUIRED)
 #endif(USE_OpenMP)
 #
-## Search for OpenMP support for multi-threading
+# Search for OpenMP support for multi-threading
 #if (OPENMP_FOUND)
 #    message("OMP found")
 #    message(${OPENMP_INCLUDES})
@@ -88,12 +88,10 @@ add_definitions(-O2 -g)
 #set (CMAKE_CXX_FLAGS "-O2 -march=native")
 include_directories(${CUDA_INCLUDE_DIRS})
 if(MSVC)
-cuda_add_executable(ObjLeft main CBM_model myDIP myGMM myUtility ObjLeftDetect VideoDetails test.cu test.h)
+    cuda_add_executable(ObjLeft main CBM_model myGMM ObjLeftDetect)
 endif()
 if(MACOS)
-    add_executable(ObjLeft main CBM_model myDIP myGMM myUtility ObjLeftDetect VideoDetails)
+    add_executable(ObjLeft main CBM_model myGMM ObjLeftDetect)
 endif()
-#target_include_directories(ObjLeft
-#        ${OpenCV_INCLUDE_DIRS}
-#        ${CUDA_TOOLKIT_ROOT_DIR}/include)
+
 target_link_libraries( ObjLeft ${OpenCV_LIBS})
