@@ -10,13 +10,16 @@
 #include <functional>
 
 #include "parameter.h"
-
+#include <deque>
 #include "opencv2/objdetect/objdetect.hpp"
 
 
 
 using namespace std;
 using namespace cv;
+
+const int CONSTTIME = 10;
+
 struct Obj_info
 {
 public:	
@@ -114,7 +117,7 @@ public:
 	vector<Obj_info*> static_object_result;//information of the static foreground objects
 	vector<Obj_info*> GetDetectResult();//get the information of the moving objects
 	vector<Obj_info*> GetStaticForegourdResult();//get the information of the static foreground objects
-
+    bool isEqual();
 	void System_Reset();
 
 	cv::Mat _Previous_Img;
@@ -136,10 +139,6 @@ public:
 	myGMM * _myGMM;//long term
 	myGMM * _myGMM2;//short term
 
-
 	pixelFSM **imageFSM;
-
-	int staticFG_pixel_num_now;
-	int staticFG_pixel_num_pre;
-	int staticFG_pixel_num_pre2;
+	std::deque<int> stateHistory;
 };

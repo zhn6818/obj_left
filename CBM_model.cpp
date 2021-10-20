@@ -37,10 +37,6 @@ void CBM_model::Initialize() {
     _writer5.open("DPM.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 30, cv::Size(new_width, new_height), 1);
 
 
-    mog_fg = cv::Mat(cv::Size(new_width, new_height), CV_8UC1, cv::Scalar::all(0));
-    mog_fg2 = cv::Mat(cv::Size(new_width, new_height), CV_8UC1), cv::Scalar::all(0);
-    imgStatic = cv::Mat(cv::Size(new_width, new_height), CV_8UC3, cv::Scalar::all(0));
-
 
     my_mog_fg = cv::Mat(cv::Size(new_width, new_height), CV_8UC1, cv::Scalar::all(0));
     my_mog_fg2 = cv::Mat(cv::Size(new_width, new_height), CV_8UC1, cv::Scalar::all(0));
@@ -65,11 +61,6 @@ void CBM_model::Initialize() {
     printf("..\n");
     _Previous_Img = cv::Mat(cv::Size(new_width, new_height), CV_8UC3, cv::Scalar::all(0));
     printf("....\n");
-
-    staticFG_pixel_num_now = -1;
-    staticFG_pixel_num_pre = -2;
-    staticFG_pixel_num_pre2 = -3;
-
 }
 
 void CBM_model::Uninitialize() {
@@ -145,13 +136,17 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
         myConvertFSM2Img(imageFSM, my_imgCandiStatic, my_imgStatic);
 
 
-        staticFG_pixel_num_pre2 = staticFG_pixel_num_pre;
-        staticFG_pixel_num_pre = staticFG_pixel_num_now;
-        staticFG_pixel_num_now = check_foreground2(my_imgStatic);
+//        staticFG_pixel_num_pre2 = staticFG_pixel_num_pre;
+//        staticFG_pixel_num_pre = staticFG_pixel_num_now;
+//        staticFG_pixel_num_now = check_foreground2(my_imgStatic);
 
-        imgStatic = my_imgStatic.clone();
-        mog_fg = my_mog_fg.clone();
-        mog_fg2 = my_mog_fg2.clone();
+        int stateCurrent = check_foreground2(my_imgStatic);
+        stateHistory.push_back(stateCurrent);
+        if(stateHistory.size() > CONSTTIME)
+        {
+            stateHistory.pop_front();
+        }
+
 
         cv::imshow("my_imgCandiStatic", my_imgCandiStatic);
         cv::imshow("static obj", my_imgStatic);
@@ -160,14 +155,13 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
 
 
         bool static_object_detected = false;
-        if ((staticFG_pixel_num_now == staticFG_pixel_num_pre) && (staticFG_pixel_num_pre == staticFG_pixel_num_pre2) &&
-            (staticFG_pixel_num_now > 0)) {
+        if ( isEqual() && ( stateCurrent > 0)) {
             static_object_detected = myClustering2(my_imgStatic, 1);
         }
 
-        _writer1.write(mog_fg);
-        _writer2.write(mog_fg2);
-        _writer3.write(imgStatic);
+        _writer1.write(my_mog_fg);
+        _writer2.write(my_mog_fg2);
+        _writer3.write(my_imgStatic);
 
         return static_object_detected;
     }
@@ -175,6 +169,24 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
 
 //
 //
+bool CBM_model::isEqual()
+{
+    bool isEqualDeque = true;
+    if(stateHistory.size() < CONSTTIME)
+    {
+        isEqualDeque = false;
+        return isEqualDeque;
+    }
+    int val = stateHistory[0];
+    for(int i = 0; i < stateHistory.size(); i++)
+    {
+        if(val != stateHistory[i])
+        {
+            isEqualDeque = false;
+        }
+    }
+    return isEqualDeque;
+}
 bool CBM_model::myClustering2(cv::Mat &img, int option) {
     int area_threshold = 0;
     cv::Mat temp;
