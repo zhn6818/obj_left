@@ -1,9 +1,6 @@
 #include "ObjLeftDetect.h"
 #include "parameter.h"
-#ifdef _WIN64
-#include "test.h"
-#endif
-//#include "opencv2/imgproc/imgproc_c.h"
+
 #include <iostream>
 using namespace std;
 
@@ -75,7 +72,6 @@ inline void WorkBegin()
 inline void WorkEnd()
 {
     work_begin = getTickCount() - work_begin;
-    //double freq = delta * 1000 / cv::getTickFrequency();
     work_fps = work_begin * 1000 / cv::getTickFrequency();
 }
 
@@ -86,6 +82,7 @@ inline string WorkFps()
     return ss.str();
 }
 
+const int iScale = 3;
 
 int main()
 {
@@ -96,75 +93,50 @@ int main()
     MIN_FG = 20;
     INPUT_RESIZE = 0.5;
     BUFFER_LENGTH = 900;
+
 	std::string test_video;
-#ifdef _WIN64
-    test_video = "E:\\BaiduNetdiskDownload\\test.mp4";
-#endif
-#ifdef __APPLE__
-    test_video = "/Users/zhanghaining/jetflow/test/test.mp4";
-#endif
 
+    test_video = "/Users/zhanghaining/git/obj_left/yiliuwu_wyj.mp4";
 
-	/************************************************************************/
-	/* Video input setting                                                   */
-	/************************************************************************/
     cv::VideoCapture capture(test_video);
     if (!capture.isOpened())
         std::cout << "fail to open!" << std::endl;
 
 	cv::Mat qImg, myimg;
-//	_video->_currentFrame = 0;
-//	cvSetCaptureProperty(_video->_file, CV_CAP_PROP_POS_FRAMES, _video->_currentFrame);
-//	myimg = cvCreateImage(cvSize(_video->_width,_video->_height),8,3);
-    myimg = cv::Mat(cv::Size((int)capture.get(cv::CAP_PROP_FRAME_WIDTH),(int)capture.get(cv::CAP_PROP_FRAME_HEIGHT)), CV_8UC3);
-	//cv::Mat mat_myimg(myimg,0);
-    cv::Mat mat_myimg(myimg);
-	//myImage * myimg1 = myCreateImage(_video->_width,_video->_height,3);
-    VideoWriter _writer;
-	_writer.open("video.avi",cv::VideoWriter::fourcc('D', 'I', 'V', 'X'),30,cv::Size((int)capture.get(cv::CAP_PROP_FRAME_WIDTH),(int)capture.get(cv::CAP_PROP_FRAME_HEIGHT)),1);
 
-	/************************************************************************/
-	/* ROI setting                                                          */
-	/************************************************************************/
-	imageheight = (int)(capture.get(cv::CAP_PROP_FRAME_HEIGHT)*INPUT_RESIZE);
-	imagewidth = (int)(capture.get(cv::CAP_PROP_FRAME_WIDTH)*INPUT_RESIZE);
-//	IplImage *setroi = cvQueryFrame(_video->_file);
-//	IplImage *setroi2; setroi2 = cvCreateImage(cvSize(imagewidth,imageheight),8,3);
+    int realH = (int)capture.get(cv::CAP_PROP_FRAME_HEIGHT);
+    int realW = (int)capture.get(cv::CAP_PROP_FRAME_WIDTH);
+
+    realH /= iScale;
+    realW /= iScale;
+
+    myimg = cv::Mat(cv::Size(realW,realH), CV_8UC3);
+    cv::Mat mat_myimg(myimg);
+
+
+	imageheight = (int)realH*INPUT_RESIZE;
+	imagewidth = (int)realW*INPUT_RESIZE;
+
     cv::Mat setroi, setroi2;
     capture.read(setroi);
+    cv::resize(setroi, setroi, cv::Size(realW, realH));
     setroi2 = cv::Mat(cv::Size(imagewidth,imageheight),CV_8UC3);
 
 	cv::resize(setroi,setroi2, cv::Size(imagewidth,imageheight));
 	cv::imshow("SetROI",setroi2);
 	cv::setMouseCallback("SetROI",onMouse,NULL);
 	cv::waitKey(0);
-//	cvDestroyWindow("SetROI");
-	
-	/************************************************************************/
-	/* counstruct object left class                                         */
-	/************************************************************************/
 
 	ObjLeftDetect _objleft(mat_myimg,GMM_LEARN_FRAME,MIN_FG,mask);
-	
 
-	/************************************************************************/
-	/* main loop                                                       */
-	/************************************************************************/
 	bool obj_left = false;
 	long currentFrame = 0;
 	while(capture.read(qImg))
-	{		
-
-//		cvCopy(qImg,myimg);
-        //myimg = qImg.clone();
-		qImg.copyTo(myimg);
-		medianBlur( mat_myimg, mat_myimg, 3);
-//		opencv_2_myImage(myimg,myimg1);//transfer opencv data to myimage data
-
-		/************************************************************************/
-		/* abandoned object detection algorithm                                 */
-		/************************************************************************/
+	{
         WorkBegin();
+        cv::resize(qImg, qImg, cv::Size(realW, realH));
+        qImg.copyTo(myimg);
+        medianBlur( mat_myimg, mat_myimg, 3);
 		obj_left = _objleft.process(mat_myimg);
         WorkEnd();
 		if (obj_left==true)
@@ -176,8 +148,7 @@ int main()
 		Mat _qImg(qImg);
 		putText(_qImg, "frame: " + std::to_string(currentFrame) + "  time:" + WorkFps(), Point(5, 20), FONT_HERSHEY_SIMPLEX, 0.9, Scalar(0, 100, 255), 2);
 		cv::imshow( "video",qImg);
-		cv::imshow("video",qImg);
-		 _writer.write(qImg);
+//		 _writer.write(qImg);
         currentFrame++;
 
 		cv::waitKey(1);
