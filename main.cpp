@@ -92,7 +92,7 @@ int main()
     GMM_LEARN_FRAME = 500;
     MAX_SFG = 200;
     MIN_SFG = 20;
-    MAX_FG = 1000;
+    MAX_FG = 5000;
     MIN_FG = 20;
     INPUT_RESIZE = 0.5;
     BUFFER_LENGTH = 900;

@@ -8,7 +8,7 @@
 #include <opencv2/ml/ml.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <functional>
-
+#include <vector>
 #include "parameter.h"
 #include <deque>
 #include "opencv2/objdetect/objdetect.hpp"
@@ -35,6 +35,7 @@ public:
 	double Owner_B[10];
 	int traj_label;
 	float traj_dist;
+	std::vector<std::vector<cv::Point>> contours;
 
 	Obj_info()
 	{
@@ -141,4 +142,5 @@ public:
 
 	pixelFSM **imageFSM;
 	std::deque<int> stateHistory;
+
 };

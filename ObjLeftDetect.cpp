@@ -60,18 +60,29 @@ bool ObjLeftDetect::process(cv::Mat& input)
 		{
 
             _ImgSynopsis.setTo(0);
-			for (int i = 0; i < _ImgSynopsis.cols; i++)
-			{
-				for (int j = 0; j < _ImgSynopsis.rows; j++)
-				{
-					myColor aaa = myGet2D(_CBM_model->my_imgStatic,i,j);
-					myColor bbb; bbb.B = 200; bbb.G = 250; bbb.R = 10;
-					if ((aaa.B==0)&&(aaa.G==200)&&(aaa.R==255))
-					{
-						mySet2D(_ImgSynopsis,bbb,i,j);
-					}
-				}
-			}
+            myimg2.copyTo(_ImgSynopsis);
+
+            for(int i = 0; i < LeftLocation.size(); i++)
+            {
+                cv::Rect tmp = cv::Rect(LeftLocation[i]->x, LeftLocation[i]->y, LeftLocation[i]->width, LeftLocation[i]->height);
+
+                cv::rectangle(_ImgSynopsis, tmp, cv::Scalar(0, 0, 255));
+            }
+
+
+//			for (int i = 0; i < _ImgSynopsis.cols; i++)
+//			{
+//				for (int j = 0; j < _ImgSynopsis.rows; j++)
+//				{
+//					myColor aaa = myGet2D(_CBM_model->my_imgStatic,i,j);
+//					myColor bbb; bbb.B = 200; bbb.G = 250; bbb.R = 10;
+//					if ((aaa.B==0)&&(aaa.G==200)&&(aaa.R==255))
+//					{
+//						mySet2D(_ImgSynopsis,bbb,i,j);
+//					}
+//				}
+//			}
+
             test = _ImgSynopsis.clone();
             cv::imshow("summary", test);
 //            cv::waitKey(1);

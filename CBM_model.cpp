@@ -37,7 +37,6 @@ void CBM_model::Initialize() {
     _writer5.open("DPM.avi", cv::VideoWriter::fourcc('D', 'I', 'V', 'X'), 30, cv::Size(new_width, new_height), 1);
 
 
-
     my_mog_fg = cv::Mat(cv::Size(new_width, new_height), CV_8UC1, cv::Scalar::all(0));
     my_mog_fg2 = cv::Mat(cv::Size(new_width, new_height), CV_8UC1, cv::Scalar::all(0));
     my_imgCandiStatic = cv::Mat(cv::Size(new_width, new_height), CV_8UC3, cv::Scalar::all(0));
@@ -126,7 +125,8 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
         cv::dilate(my_mog_fg, my_mog_fg, structureElement, cv::Point(-1, -1));
         cv::dilate(my_mog_fg2, my_mog_fg2, structureElement, cv::Point(-1, -1));
 
-        if (check_foreground2(my_mog_fg) > (my_mog_fg.cols * my_mog_fg.rows * 0.30)) {//if motion detection cannot work well
+        if (check_foreground2(my_mog_fg) >
+            (my_mog_fg.cols * my_mog_fg.rows * 0.30)) {//if motion detection cannot work well
             _myGMM->ChangeLearningRate(0.02);//speed up long-term model's learning rate to adapt the lighting changes.
         } else {
             _myGMM->ChangeLearningRate(0.0001);//defult long-term model learning rate
@@ -142,8 +142,7 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
 
         int stateCurrent = check_foreground2(my_imgStatic);
         stateHistory.push_back(stateCurrent);
-        if(stateHistory.size() > CONSTTIME)
-        {
+        if (stateHistory.size() > CONSTTIME) {
             stateHistory.pop_front();
         }
 
@@ -155,7 +154,7 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
 
 
         bool static_object_detected = false;
-        if ( isEqual() && ( stateCurrent > 0)) {
+        if (isEqual() && (stateCurrent > 0)) {
             static_object_detected = myClustering2(my_imgStatic, 1);
         }
 
@@ -169,24 +168,21 @@ bool CBM_model::Motion_Detection(cv::Mat &img) {
 
 //
 //
-bool CBM_model::isEqual()
-{
+bool CBM_model::isEqual() {
     bool isEqualDeque = true;
-    if(stateHistory.size() < CONSTTIME)
-    {
+    if (stateHistory.size() < CONSTTIME) {
         isEqualDeque = false;
         return isEqualDeque;
     }
     int val = stateHistory[0];
-    for(int i = 0; i < stateHistory.size(); i++)
-    {
-        if(val != stateHistory[i])
-        {
+    for (int i = 0; i < stateHistory.size(); i++) {
+        if (val != stateHistory[i]) {
             isEqualDeque = false;
         }
     }
     return isEqualDeque;
 }
+
 bool CBM_model::myClustering2(cv::Mat &img, int option) {
     int area_threshold = 0;
     cv::Mat temp;
@@ -226,10 +222,17 @@ int CBM_model::GetLabeling2(cv::Mat &pImg1, int areaThreshold, int option) {
     if (option == 1) {
         static_object_result.clear();//clear the vectors
     }
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(pImg1, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+    cv::threshold(pImg1, pImg1, 0, 255, cv::THRESH_BINARY);
+//    std::vector<std::vector<cv::Point>> contours;
+//    std::vector<cv::Vec4i> hierarchy;
+//    cv::findContours(pImg1, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    std::vector<std::vector<cv::Point>> contours1;
+    std::vector<cv::Vec4i> hierachy1;
+    cv::findContours(my_mog_fg, contours1, hierachy1, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
+//    cv::imshow("t1", pImg1);
+//    cv::imshow("t2", my_mog_fg);
+//    cv::waitKey(1);
     int areaThreshold_max = 0, areaThreshold_min = 0;
     if (option == 0)//for moving foreground
     {
@@ -239,24 +242,51 @@ int CBM_model::GetLabeling2(cv::Mat &pImg1, int areaThreshold, int option) {
         areaThreshold_max = MAX_SFG;
         areaThreshold_min = MIN_SFG;
     }
-    for (int i = 0; i < contours.size(); i++) {
-        cv::Rect currentBox = cv::boundingRect(contours[i]);
-        if ((((int) currentBox.width * (int) currentBox.height) > areaThreshold_min) && (((int) currentBox.width * (int) currentBox.height) < (float) areaThreshold_max))
-        {
-            Obj_info *element;
-            element = new Obj_info;
-            element->x = currentBox.x;
-            element->y = currentBox.y;
-            element->width = currentBox.width;
-            element->height = currentBox.height;
-            if (option == 0)
-                detected_result.push_back(element);
-            if (option == 1)
-                static_object_result.push_back(element);
-        }
+    for (int ii = 0; ii < contours1.size(); ii++) {
+        cv::Mat imgTemp = cv::Mat(my_mog_fg.rows, my_mog_fg.cols, CV_8UC1, cv::Scalar::all(0));
+        cv::drawContours(imgTemp, contours1, ii, cv::Scalar::all(255), cv::FILLED);
+        cv::Mat tt = imgTemp & pImg1;
+        std::vector<cv::Point> vecP;
+        cv::findNonZero(tt, vecP);
+        cv::Rect currentBox = cv::boundingRect(contours1[ii]);
+        if (vecP.size() > 0) {
+            if (vecP.size() > areaThreshold_min && vecP.size() < areaThreshold_max) {
 
-        found_objnum++;
+                Obj_info *element;
+                element = new Obj_info;
+                element->x = currentBox.x;
+                element->y = currentBox.y;
+                element->width = currentBox.width;
+                element->height = currentBox.height;
+                element->contours.push_back(contours1[ii]);
+                if (option == 0)
+                    detected_result.push_back(element);
+                if (option == 1)
+                    static_object_result.push_back(element);
+            }
+            found_objnum++;
+        }
     }
+//    cv::waitKey(1);
+
+//    for (int i = 0; i < contours.size(); i++) {
+//        cv::Rect currentBox = cv::boundingRect(contours[i]);
+//        if ((((int) currentBox.width * (int) currentBox.height) > areaThreshold_min) && (((int) currentBox.width * (int) currentBox.height) < (float) areaThreshold_max))
+//        {
+//            Obj_info *element;
+//            element = new Obj_info;
+//            element->x = currentBox.x;
+//            element->y = currentBox.y;
+//            element->width = currentBox.width;
+//            element->height = currentBox.height;
+//            if (option == 0)
+//                detected_result.push_back(element);
+//            if (option == 1)
+//                static_object_result.push_back(element);
+//        }
+//
+//        found_objnum++;
+//    }
 
     return found_objnum;
 }
@@ -270,7 +300,6 @@ vector<Obj_info *> CBM_model::GetDetectResult() {
 vector<Obj_info *> CBM_model::GetStaticForegourdResult() {
     return static_object_result;
 }
-
 
 
 void CBM_model::myFSM(cv::Mat &short_term, cv::Mat &long_term, pixelFSM **imageFSM) {
@@ -358,10 +387,9 @@ void CBM_model::myConvertFSM2Img(pixelFSM **Array, cv::Mat &Candidate_Fg, cv::Ma
 
 int CBM_model::check_foreground2(cv::Mat &img) {
     cv::Mat grayImg;
-    if(img.channels() == 3)
-    {
+    if (img.channels() == 3) {
         cv::cvtColor(img, grayImg, cv::COLOR_BGR2GRAY);
-    } else{
+    } else {
         grayImg = img;
     }
 
@@ -370,19 +398,17 @@ int CBM_model::check_foreground2(cv::Mat &img) {
 
     return pNoZero.size();
 }
-myColor myGet2D(cv::Mat& input, int x, int y)
-{
+
+myColor myGet2D(cv::Mat &input, int x, int y) {
     int width = input.cols;
     int height = input.rows;
     int depth = input.channels();
     myColor colors;
-    if (depth == 1)
-    {
+    if (depth == 1) {
         colors.B = input.at<uchar>(y, x);//B
         colors.G = colors.B;//G
         colors.R = colors.B;//R
-    }
-    else if (depth == 3){
+    } else if (depth == 3) {
         colors.B = input.at<cv::Vec3b>(y, x)[0];//B
         colors.G = input.at<cv::Vec3b>(y, x)[1];//G
         colors.R = input.at<cv::Vec3b>(y, x)[2];//R
@@ -393,18 +419,14 @@ myColor myGet2D(cv::Mat& input, int x, int y)
 /************************************************************************/
 /* mySet2D: assign RGB value                        */
 /************************************************************************/
-void mySet2D(cv::Mat& input, myColor colors, int x, int y)
-{
+void mySet2D(cv::Mat &input, myColor colors, int x, int y) {
     int width = input.cols;
     int height = input.rows;
     int depth = input.channels();
 
-    if (depth == 1)
-    {
+    if (depth == 1) {
         input.at<uchar>(y, x) = colors.B;
-    }
-    else if (depth == 3)
-    {
+    } else if (depth == 3) {
         input.at<cv::Vec3b>(y, x)[0] = colors.B;
         input.at<cv::Vec3b>(y, x)[1] = colors.G;
         input.at<cv::Vec3b>(y, x)[2] = colors.R;
