@@ -21,7 +21,6 @@ public:
 	bool process(cv::Mat& input);
 	CBM_model *_CBM_model;
     VideoWriter _writer1, _writer2;
-    cv::Mat A, B;
 
 	void initialize();
 	int new_width, new_height;

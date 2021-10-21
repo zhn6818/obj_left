@@ -223,16 +223,10 @@ int CBM_model::GetLabeling2(cv::Mat &pImg1, int areaThreshold, int option) {
         static_object_result.clear();//clear the vectors
     }
     cv::threshold(pImg1, pImg1, 0, 255, cv::THRESH_BINARY);
-//    std::vector<std::vector<cv::Point>> contours;
-//    std::vector<cv::Vec4i> hierarchy;
-//    cv::findContours(pImg1, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     std::vector<std::vector<cv::Point>> contours1;
     std::vector<cv::Vec4i> hierachy1;
     cv::findContours(my_mog_fg, contours1, hierachy1, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-//    cv::imshow("t1", pImg1);
-//    cv::imshow("t2", my_mog_fg);
-//    cv::waitKey(1);
     int areaThreshold_max = 0, areaThreshold_min = 0;
     if (option == 0)//for moving foreground
     {
@@ -267,27 +261,6 @@ int CBM_model::GetLabeling2(cv::Mat &pImg1, int areaThreshold, int option) {
             found_objnum++;
         }
     }
-//    cv::waitKey(1);
-
-//    for (int i = 0; i < contours.size(); i++) {
-//        cv::Rect currentBox = cv::boundingRect(contours[i]);
-//        if ((((int) currentBox.width * (int) currentBox.height) > areaThreshold_min) && (((int) currentBox.width * (int) currentBox.height) < (float) areaThreshold_max))
-//        {
-//            Obj_info *element;
-//            element = new Obj_info;
-//            element->x = currentBox.x;
-//            element->y = currentBox.y;
-//            element->width = currentBox.width;
-//            element->height = currentBox.height;
-//            if (option == 0)
-//                detected_result.push_back(element);
-//            if (option == 1)
-//                static_object_result.push_back(element);
-//        }
-//
-//        found_objnum++;
-//    }
-
     return found_objnum;
 }
 
