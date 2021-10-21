@@ -18,7 +18,8 @@
 using namespace std;
 using namespace cv;
 
-const int CONSTTIME = 10;
+const int CONSTTIME = 5;
+const int staticTime = 300;
 
 struct Obj_info
 {

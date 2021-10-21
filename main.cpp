@@ -82,21 +82,22 @@ inline string WorkFps()
     return ss.str();
 }
 
-const int iScale = 3;
+const int iScale = 1;
 
 int main()
 {
     GMM_LEARN_FRAME = 500;
     MAX_SFG = 200;
     MIN_SFG = 20;
-    MAX_FG = 5000;
+    MAX_FG = 1000;
     MIN_FG = 20;
     INPUT_RESIZE = 0.5;
     BUFFER_LENGTH = 900;
 
 	std::string test_video;
-
-    test_video = "/Users/zhanghaining/git/obj_left/yiliuwu_wyj.mp4";
+//1_short_Trim.mp4
+//    test_video = "/Users/zhanghaining/git/obj_left/sss.avi";
+    test_video = "/Users/zhanghaining/git/obj_left/test.mp4";
 
     cv::VideoCapture capture(test_video);
     if (!capture.isOpened())

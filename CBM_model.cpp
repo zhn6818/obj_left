@@ -304,7 +304,7 @@ void CBM_model::myFSM(cv::Mat &short_term, cv::Mat &long_term, pixelFSM **imageF
             }
 
             if ((imageFSM[i][j].state_now == 1) && (imageFSM[i][j].state_pre == 1)) {
-                if (imageFSM[i][j].static_count == (450)) {
+                if (imageFSM[i][j].static_count == (staticTime)) {
                     imageFSM[i][j].staticFG_stable = true;
                 }
 
